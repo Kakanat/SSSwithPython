@@ -2,6 +2,7 @@ import numpy as np
 import pyroomacoustics as pa
 import wave
 import scipy.signal as sp
+import matplotlib.pyplot as plt
 
 def calculate_steering_vector(mic_alignments,source_locations,freqs,sound_speed=340,is_use_far=False):
     #マイク数を取得
@@ -67,68 +68,106 @@ def write_file_from_time_signal(signal,file_name,sample_rate):
     #ファイルを閉じる
     wave_out.close()
 
-np.random.seed(0)
-# clean_wave_files = ["../CMU_ARCTIC/cmu_us_aew_arctic/wav/arctic_a0001.wav"]
-clean_wave_files = ["../CMU_ARCTIC/cmu_us_aew_arctic/wav/arctic_a0001.wav", "../CMU_ARCTIC/cmu_us_axb_arctic/wav/arctic_a0002.wav"]
-n_sources = len(clean_wave_files)
-n_samples = 0
-for clean_wave_file in clean_wave_files:
-    wav = wave.open(clean_wave_file)
-    if n_samples < wav.getnframes():
-        n_samples = wav.getnframes()
-    wav.close()
-clean_data = np.zeros([n_sources, n_samples])
-s = 0
-for clean_wave_file in clean_wave_files:
-    wav = wave.open(clean_wave_file)
-    data = wav.readframes(wav.getnframes())
-    data = np.frombuffer(data, dtype=np.int16)
-    data = data / np.iinfo(np.int16).max
-    clean_data[s, :wav.getnframes()] = data
-    wav.close()
-    s = s + 1
+# np.random.seed(0)
+# # clean_wave_files = ["../CMU_ARCTIC/cmu_us_aew_arctic/wav/arctic_a0001.wav"]
+# clean_wave_files = ["../CMU_ARCTIC/cmu_us_aew_arctic/wav/arctic_a0001.wav", "../CMU_ARCTIC/cmu_us_axb_arctic/wav/arctic_a0002.wav"]
+# n_sources = len(clean_wave_files)
+# n_samples = 0
+# for clean_wave_file in clean_wave_files:
+#     wav = wave.open(clean_wave_file)
+#     if n_samples < wav.getnframes():
+#         n_samples = wav.getnframes()
+#     wav.close()
+# clean_data = np.zeros([n_sources, n_samples])
+# s = 0
+# for clean_wave_file in clean_wave_files:
+#     wav = wave.open(clean_wave_file)
+#     data = wav.readframes(wav.getnframes())
+#     data = np.frombuffer(data, dtype=np.int16)
+#     data = data / np.iinfo(np.int16).max
+#     clean_data[s, :wav.getnframes()] = data
+#     wav.close()
+#     s = s + 1
+# sample_rate = 16000
+# N = 1024
+# Nk = N / 2 + 1
+# freqs = np.arange(0, Nk, 1) * sample_rate / N
+# # SNR = 20.
+# SNR = 90.
+# room_dim = np.r_[10.0, 10.0, 10.0]
+# mic_array_loc = room_dim / 2 + np.random.randn(3) * 0.1
+# # mic_alignments = np.array(
+# #     [[-0.01, 0.0, 0.0],
+# #      [ 0.01, 0.0, 0.0]]
+# # )
+# mic_alignments = np.array(
+#     [[x, 0.0, 0.0] for x in np.arange(-0.31, 0.32, 0.02)]
+# )
+# n_channels = np.shape(mic_alignments)[0]
+# R = mic_alignments.T + mic_array_loc[:, None]
+# room = pa.ShoeBox(room_dim, fs=sample_rate, max_order=0)
+# room.add_microphone_array(pa.MicrophoneArray(R, fs=room.fs))
+# # doas = np.array([[np.pi / 2., 0.]])
+# doas = np.array([[np.pi / 2., 0.],
+#                  [np.pi / 2., np.pi / 2.]])
+# distance = 1.
+# source_locations = np.zeros((3, doas.shape[0]), dtype=doas.dtype)
+# source_locations[0, :] = np.cos(doas[:, 1]) * np.sin(doas[:, 0])
+# source_locations[1, :] = np.sin(doas[:, 1]) * np.sin(doas[:, 0])
+# source_locations[2, :] = np.cos(doas[:, 0])
+# source_locations *= distance
+# source_locations += mic_array_loc[:, None]
+# print(np.shape(clean_data))
+# for s in range(n_sources):
+#     clean_data[s] /= np.std(clean_data[s])
+#     room.add_source(source_locations[:, s], signal=clean_data[s])
+# room.simulate(snr=SNR)
+# multi_conv_data = room.mic_array.signals
+# write_file_from_time_signal(multi_conv_data[0] * np.iinfo(np.int16).max / 20.,
+#                             "./results/mix_in_2spk.wav", sample_rate)
+# # near_steering_vectors = calculate_steering_vector(R, source_locations, freqs, is_use_far=False)
+# near_steering_vectors = calculate_steering_vector(R, source_locations[:,:1], freqs, is_use_far=False)
+# f, t, stft_data = sp.stft(multi_conv_data, fs=sample_rate, window="hann", nperseg=N)
+# s_hat = np.einsum("ksm,mkt->skt", np.conjugate(near_steering_vectors), stft_data)
+# c_hat = np.einsum("skt,ksm->mskt", s_hat, near_steering_vectors)
+# t, ds_out = sp.istft(c_hat[0], fs=sample_rate, window="hann", nperseg=N)
+# ds_out = ds_out * np.iinfo(np.int16).max / 20.
+# write_file_from_time_signal(ds_out, "./results/ds_out_2spk.wav", sample_rate)
+
 sample_rate = 16000
 N = 1024
 Nk = N / 2 + 1
 freqs = np.arange(0, Nk, 1) * sample_rate / N
-# SNR = 20.
-SNR = 90.
-room_dim = np.r_[10.0, 10.0, 10.0]
-mic_array_loc = room_dim / 2 + np.random.randn(3) * 0.1
-# mic_alignments = np.array(
-#     [[-0.01, 0.0, 0.0],
-#      [ 0.01, 0.0, 0.0]]
-# )
-mic_alignments = np.array(
-    [[x, 0.0, 0.0] for x in np.arange(-0.31, 0.32, 0.02)]
-)
+# mic_alignments = np.array([[x, 0.0, 0.0] for x in np.arange(-0.01, 0.02, 0.02)])
+mic_alignments = np.array([[x, 0.0, 0.0] for x in np.arange(-0.31, 0.32, 0.02)])
 n_channels = np.shape(mic_alignments)[0]
-R = mic_alignments.T + mic_array_loc[:, None]
-room = pa.ShoeBox(room_dim, fs=sample_rate, max_order=0)
-room.add_microphone_array(pa.MicrophoneArray(R, fs=room.fs))
-# doas = np.array([[np.pi / 2., 0.]])
-doas = np.array([[np.pi / 2., 0.],
-                 [np.pi / 2., np.pi / 2.]])
+doas = np.array([[np.pi / 2., theta] for theta in np.arange(-np.pi, np.pi, 1. / 180. * np.pi)])
 distance = 1.
 source_locations = np.zeros((3, doas.shape[0]), dtype=doas.dtype)
 source_locations[0, :] = np.cos(doas[:, 1]) * np.sin(doas[:, 0])
 source_locations[1, :] = np.sin(doas[:, 1]) * np.sin(doas[:, 0])
 source_locations[2, :] = np.cos(doas[:, 0])
 source_locations *= distance
-source_locations += mic_array_loc[:, None]
-print(np.shape(clean_data))
-for s in range(n_sources):
-    clean_data[s] /= np.std(clean_data[s])
-    room.add_source(source_locations[:, s], signal=clean_data[s])
-room.simulate(snr=SNR)
-multi_conv_data = room.mic_array.signals
-write_file_from_time_signal(multi_conv_data[0] * np.iinfo(np.int16).max / 20.,
-                            "./results/mix_in_2spk.wav", sample_rate)
-# near_steering_vectors = calculate_steering_vector(R, source_locations, freqs, is_use_far=False)
-near_steering_vectors = calculate_steering_vector(R, source_locations[:,:1], freqs, is_use_far=False)
-f, t, stft_data = sp.stft(multi_conv_data, fs=sample_rate, window="hann", nperseg=N)
-s_hat = np.einsum("ksm,mkt->skt", np.conjugate(near_steering_vectors), stft_data)
-c_hat = np.einsum("skt,ksm->mskt", s_hat, near_steering_vectors)
-t, ds_out = sp.istft(c_hat[0], fs=sample_rate, window="hann", nperseg=N)
-ds_out = ds_out * np.iinfo(np.int16).max / 20.
-write_file_from_time_signal(ds_out, "./results/ds_out_2spk.wav", sample_rate)
+near_steering_vectors = calculate_steering_vector(mic_alignments.T, source_locations, freqs, is_use_far=False)
+desired_index = np.argmin(np.abs(doas[:,1]), axis=0)
+desired_steering_vector = near_steering_vectors[:, desired_index, :]
+directivity_pattern = np.square(np.abs(np.einsum("km,ksm->ks", np.conjugate(desired_steering_vector), near_steering_vectors)))
+plt.style.use("grayscale")
+fig = plt.figure(figsize=(7,7))
+ax = plt.subplot(111, projection="polar")
+ax.set_theta_zero_location('N')
+ax.set_theta_direction("clockwise")
+ax.grid(True, linestyle="--")
+ax.yaxis.labelpad = -250
+ylabel = plt.ylabel("Responce [dB]")
+ylabel.set_position((0, 0.6))
+ylabel.set_rotation(0)
+plt.yticks([-20, -10, 0])
+plt.ylim([-30, 0])
+plt.xlabel("Azimuth [degrees]")
+draw_freqs = np.array([1000, 2000, 3000, 4000])
+draw_freq_list = np.argmin(np.abs(freqs[:, None] - draw_freqs[None, :]), axis=0)
+for draw_freq_index in draw_freq_list:
+    plt.plot(doas[:,1], 10. * np.log10(directivity_pattern[draw_freq_index, :]), lw=3, label=f"{freqs[draw_freq_index]} [Hz]")
+plt.legend(loc=(0.2, 0.6))
+plt.show()
