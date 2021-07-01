@@ -236,7 +236,7 @@ for clean_wave_file in clean_wave_files:
 # シミュレーションのパラメータ
 
 #シミュレーションで用いる音源数
-n_sim_sources=1
+n_sim_sources=2
 
 #サンプリング周波数
 sample_rate=16000
